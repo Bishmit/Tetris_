@@ -17,13 +17,14 @@ struct tetromino {
 
 struct tetromino tet;
 string current_tetromino;
-
 char ch;
 char buffer[h][w];
 char tetromino[4][4];
 int score = 0;
 int game_over = 0;
+int drop = 1;
 int x_off = 4, y_off = 4;
+
 void init_buffer();
 void render();
 void parse_pattern(string);
@@ -31,21 +32,39 @@ void generate_tetromino(int);
 void bind_tetromino();
 void clear_tetromino();
 void rotate_tetromino(int);
+void drop_tetromino();
+void detect_collision();
+
 int main() {
 	init_buffer();
-	generate_tetromino(5);
+	generate_tetromino(6);
 	bind_tetromino();
 	render();
 	int deg = 90;
-	while (deg<1000) {
-		rotate_tetromino(deg);
+	Sleep(500);
+	rotate_tetromino(deg);
+	while (1) {
 		bind_tetromino();
 		render();
-		deg += 90;
-		Sleep(1000);
+		detect_collision();
+		drop_tetromino();
+		Sleep(100);
 	}
 	ch = _getch();
 	return 0;
+}
+
+void drop_tetromino() {
+	clear_tetromino();
+	y_off += drop;
+}
+
+void detect_collision() {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			if (i + y_off + 1 == h - 1 && tetromino[i][j] == 'X') drop = 0;
+		}
+	}
 }
 
 void init_buffer() {
@@ -119,7 +138,8 @@ void bind_tetromino() {
 void clear_tetromino() {
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			buffer[i + y_off][j + x_off] = ' ';
+			if (tetromino[i][j] == 'X')
+				buffer[i + y_off][j + x_off] = ' ';
 		}
 	}
 }
@@ -135,43 +155,45 @@ void parse_pattern(string s) {
 void rotate_tetromino(int angle) {
 	string s = current_tetromino;
 	int index;
-	switch (angle) {
-	case 90:
-		clear_tetromino();
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				index = 12 - 4 * j + i;
-				tetromino[i][j] = s[index];
+	if (current_tetromino != tet.o) {
+		switch (angle) {
+		case 90:
+			clear_tetromino();
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					index = 12 - 4 * j + i;
+					tetromino[i][j] = s[index];
+				}
 			}
-		}
-		break;
-	case 180:
-		clear_tetromino();
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				index = 15 - j - 4 * i;
-				tetromino[i][j] = s[index];
+			break;
+		case 180:
+			clear_tetromino();
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					index = 15 - j - 4 * i;
+					tetromino[i][j] = s[index];
+				}
 			}
-		}
-		break;
-	case 270:
-		clear_tetromino();
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				index = 3+ 4 * j - i;
-				tetromino[i][j] = s[index];
+			break;
+		case 270:
+			clear_tetromino();
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					index = 3 + 4 * j - i;
+					tetromino[i][j] = s[index];
+				}
 			}
-		}
-		break;
-	case 360:
-		clear_tetromino();
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				index = j + 4 * i;
-				tetromino[i][j] = s[index];
+			break;
+		case 360:
+			clear_tetromino();
+			for (int i = 0; i < 4; i++) {
+				for (int j = 0; j < 4; j++) {
+					index = j + 4 * i;
+					tetromino[i][j] = s[index];
+				}
 			}
+			break;
 		}
-		break;
 	}
 	
 }
