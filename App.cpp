@@ -24,6 +24,7 @@ int score = 0;
 int game_over = 0;
 int drop = 1;
 int x_off = 4, y_off = 4;
+int slide_left = -1, slide_right = 1;
 
 void init_buffer();
 void render();
@@ -34,6 +35,7 @@ void clear_tetromino();
 void rotate_tetromino(int);
 void drop_tetromino();
 void detect_collision();
+void control();
 
 int main() {
 	init_buffer();
@@ -48,10 +50,27 @@ int main() {
 		render();
 		detect_collision();
 		drop_tetromino();
+		control();
 		Sleep(100);
 	}
 	ch = _getch();
 	return 0;
+}
+
+void control() {
+	char c;
+	if (_kbhit()) {
+		c = _getch();
+		switch (c) {
+		case 'a':
+			x_off += slide_left;
+			break;
+		case 'd':
+			x_off += slide_right;
+			break;
+		}
+		bind_tetromino();
+	}
 }
 
 void drop_tetromino() {
@@ -62,7 +81,12 @@ void drop_tetromino() {
 void detect_collision() {
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
+			// ground collision
 			if (i + y_off + 1 == h - 1 && tetromino[i][j] == 'X') drop = 0;
+			// left wall collision
+			if (j + x_off - 1 < 1 && tetromino[i][j] == 'X') slide_left = 0;
+			// right wall collision
+			if (j + x_off + 1 > w - 2 && tetromino[i][j] == 'X') slide_right = 0;
 		}
 	}
 }
