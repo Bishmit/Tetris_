@@ -1,18 +1,19 @@
 #include <iostream>
 #include <conio.h>
 #include <windows.h>
-#define h 23
+#include <ctime>
+#define h 22
 #define w 12
 using namespace std;
 
 struct tetromino {
-	string t = ".X..XXX.........";
-	string o = "XX..XX..........";
+	string t = "....XXX..X......";
+	string o = ".....XX..XX.....";
 	string l = ".X...X...XX.....";
-	string j = ".X...X..XX......";
-	string i = "X...X...X...X...";
-	string s = ".XX.XX..........";
-	string z = "XX...XX.........";
+	string j = "..X...X..XX.....";
+	string i = ".X...X...X...X..";
+	string s = ".....XX.XX......";
+	string z = "....XX...XX.....";
 };
 
 struct tetromino tet;
@@ -23,8 +24,9 @@ char tetromino[4][4];
 int score = 0;
 int game_over = 0;
 int drop = 1;
-int x_off = 4, y_off = 4;
+int x_off = 4, y_off = 1;
 int slide_left = -1, slide_right = 1;
+int new_tetromino = 1;
 
 void init_buffer();
 void render();
@@ -38,8 +40,9 @@ void detect_collision();
 void control();
 
 int main() {
+	srand((unsigned int)time(0));
 	init_buffer();
-	generate_tetromino(6);
+	generate_tetromino(7);
 	bind_tetromino();
 	render();
 	int deg = 90;
@@ -52,9 +55,31 @@ int main() {
 		drop_tetromino();
 		control();
 		Sleep(100);
+		if (drop == 0) generate_tetromino(rand()%8);
 	}
 	ch = _getch();
 	return 0;
+}
+
+void detect_collision() {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			// ground collision
+			if (i + y_off + 1 == h - 1 && tetromino[i][j] == 'X') {
+				drop = 0;
+			}
+			// left wall collision
+			if (j + x_off - 1 < 1 && tetromino[i][j] == 'X') {
+				slide_left = 0;
+				slide_right = 1;
+			}
+			// right wall collision
+			if (j + x_off + 1 > w - 2 && tetromino[i][j] == 'X') {
+				slide_right = 0;
+				slide_left = -1;
+			}
+		}
+	}
 }
 
 void control() {
@@ -73,43 +98,41 @@ void control() {
 	}
 }
 
-void drop_tetromino() {
-	clear_tetromino();
-	y_off += drop;
-}
-
-void detect_collision() {
+void bind_tetromino() {
+	if (!new_tetromino) {
+		clear_tetromino();
+	}
+	new_tetromino = 0;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			// ground collision
-			if (i + y_off + 1 == h - 1 && tetromino[i][j] == 'X') drop = 0;
-			// left wall collision
-			if (j + x_off - 1 < 1 && tetromino[i][j] == 'X') slide_left = 0;
-			// right wall collision
-			if (j + x_off + 1 > w - 2 && tetromino[i][j] == 'X') slide_right = 0;
+			if (tetromino[i][j] == 'X')
+				buffer[i + y_off][j + x_off] = tetromino[i][j];
 		}
 	}
 }
 
-void init_buffer() {
-	for (int i = 0; i < h; i++) {
-		for (int j = 0; j < w; j++) {
-			buffer[i][j] = ' ';
-			if (i == 0 || i == h - 1 || j == 0 || j == w - 1) buffer[i][j] = 'X';
+void clear_tetromino() {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			if (tetromino[i][j] == 'X')
+				buffer[i + y_off][j + x_off] = ' ';
 		}
 	}
 }
-void render() {
-	system("cls");
-	for (int i = 0; i < h; i++) {
-		for (int j = 0; j < w; j++) {
-			cout << buffer[i][j] << " ";
+
+void parse_pattern(string s) {
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			tetromino[i][j] = s[4 * i + j];
 		}
-		cout << endl;
 	}
 }
 
 void generate_tetromino(int n) {
+	slide_left = -1; slide_right = 1;
+	x_off = 4, y_off = 1;
+	new_tetromino = 1;
+	drop = 1;
 	switch (n) {
 	case 1:
 		// T
@@ -149,30 +172,26 @@ void generate_tetromino(int n) {
 	}
 }
 
-void bind_tetromino() {
+void drop_tetromino() {
 	clear_tetromino();
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			if(tetromino[i][j]=='X')
-			buffer[i + y_off][j + x_off] = tetromino[i][j];
+	y_off += drop;
+}
+
+void init_buffer() {
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			buffer[i][j] = ' ';
+			if (i == 0 || i == h - 1 || j == 0 || j == w - 1) buffer[i][j] = 'X';
 		}
 	}
 }
-
-void clear_tetromino() {
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			if (tetromino[i][j] == 'X')
-				buffer[i + y_off][j + x_off] = ' ';
+void render() {
+	system("cls");
+	for (int i = 0; i < h; i++) {
+		for (int j = 0; j < w; j++) {
+			cout << buffer[i][j] << " ";
 		}
-	}
-}
-
-void parse_pattern(string s) {
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			tetromino[i][j] = s[4 * i + j];
-		}
+		cout << endl;
 	}
 }
 
@@ -219,5 +238,4 @@ void rotate_tetromino(int angle) {
 			break;
 		}
 	}
-	
 }
