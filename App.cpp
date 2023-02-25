@@ -2,7 +2,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <ctime>
-#define h 22
+#define h 30
 #define w 12
 using namespace std;
 
@@ -26,9 +26,9 @@ int game_over = 0;
 int drop = 1;
 int x_off = 4, y_off = 1;
 int slide_left = -1, slide_right = 1;
-int new_tetromino = 1;
 int left_side, right_side, down_side;
 int rotation_dir = 0;
+char play = 'y';
 
 void init_buffer();
 void render();
@@ -42,27 +42,55 @@ void detect_collision();
 void control();
 void calculate_sides();
 void check_line();
+void game_over_message();
+void reset_game();
+void home_screen();
 
 int main() {
 	srand((unsigned int)time(0));
-	init_buffer();
+	home_screen();
+	while (play == 'y') {
+		init_buffer();
+		reset_game();
+		while (!game_over) {
+			rotate_tetromino(rotation_dir);
+			detect_collision();
+			bind_tetromino();
+			render();
+			check_line();
+			drop_tetromino();
+			control();
+			Sleep(100);
+			if (drop == 0) generate_tetromino(1 + rand() % 7);
+		}
+		game_over_message();
+	}
+	return 0;
+}
+
+void home_screen() {
+	cout << "a: left  d: right  w: rotate clockwise  s: rotate anti_clockwise" << endl;
+	cout << "Press any key to start...";
+	play = _getch();
+	play = 'y';
+}
+
+void reset_game() {
+	score = 0;
+	game_over = 0;
+	drop = 1;
+	x_off = 4; y_off = 1;
+	slide_left = -1; slide_right = 1;
+	rotation_dir = 0;
+	//generate_tetromino(1 + rand() % 7);
 	generate_tetromino(5);
 	bind_tetromino();
 	render();
 	Sleep(500);
-	while (1) {
-		rotate_tetromino(rotation_dir);
-		detect_collision();
-		check_line();
-		bind_tetromino();
-		render();
-		drop_tetromino();
-		control();
-		Sleep(200);
-		if (drop == 0) generate_tetromino(1+rand()%8);
-	}
-	ch = _getch();
-	return 0;
+}
+void game_over_message() {
+	cout << "Game Over!" << endl << "Play again(y)? ";
+	cin >> play;
 }
 
 void check_line() {
@@ -75,6 +103,7 @@ void check_line() {
 		}
 		if (n == 10) {
 			score++;
+			Beep(500, 100);
 			unbind_tetromino();
 			for (int k = i; k > 1; k--) {
 				for (int j = 1; j < w - 1; j++) {
@@ -85,7 +114,6 @@ void check_line() {
 		}
 	}
 }
-
 
 void detect_collision() {
 	// left wall
@@ -118,6 +146,11 @@ void detect_collision() {
 		if (tetromino[j][right_side] == 'X' && buffer[j + y_off][right_side + x_off + 1] == 'X') slide_right = 0;
 		if (tetromino[j][left_side] == 'X' && buffer[j + y_off][left_side + x_off - 1] == 'X') slide_left = 0;
 	}
+
+	for (int j = 1; j < w - 1; j++) {
+		if (buffer[5][j] == 'X') game_over = 1;
+	}
+
 	bind_tetromino();
 	
 	// ground
@@ -139,10 +172,10 @@ void control() {
 			x_off += slide_right;
 			break;
 		case 'w':
-			rotation_dir = (rotation_dir - 1 + 4) % 4;
+			rotation_dir = (rotation_dir + 1) % 4;
 			break;
 		case 's':
-			rotation_dir = (rotation_dir + 1) % 4;
+			rotation_dir = (rotation_dir - 1 + 4) % 4;
 			break;
 		}
 		bind_tetromino();
@@ -180,7 +213,6 @@ void generate_tetromino(int n) {
 	Sleep(100);
 	slide_left = -1; slide_right = 1;
 	x_off = 4, y_off = 1;
-	new_tetromino = 1;
 	drop = 1;
 	switch (n) {
 	case 1:
@@ -274,6 +306,14 @@ void rotate_tetromino(int angle) {
 				}
 			}
 	calculate_sides();
+	if (right_side + x_off >= w - 1) x_off -= right_side - (w - 2);
+	if (left_side + x_off <= 0) x_off += (1 - left_side);
+	for (int i = down_side; i >= 0; i--) {
+		for (int j = left_side; j <= right_side ; j++) {
+			if (tetromino[i][j] == 'X' && buffer[i + y_off][j + x_off] == 'X') y_off--;
+		}
+	}
+	bind_tetromino();
 }
 
 void calculate_sides() {
