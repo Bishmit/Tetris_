@@ -27,6 +27,7 @@ int drop = 1;
 int x_off = 4, y_off = 1;
 int slide_left = -1, slide_right = 1;
 int new_tetromino = 1;
+int left_side, right_side, down_side;
 
 void init_buffer();
 void render();
@@ -38,11 +39,12 @@ void rotate_tetromino(int);
 void drop_tetromino();
 void detect_collision();
 void control();
+void calculate_sides();
 
 int main() {
 	srand((unsigned int)time(0));
 	init_buffer();
-	generate_tetromino(7);
+	generate_tetromino(4);
 	bind_tetromino();
 	render();
 	int deg = 90;
@@ -61,24 +63,42 @@ int main() {
 	return 0;
 }
 
-void detect_collision() {
+void calculate_sides() {
+	for (int j = 3; j >= 0; j--) {
+		for (int i = 0; i < 4; i++) {
+			if (tetromino[i][j] == 'X') left_side = j;
+		}
+	}
+	for (int j = 0; j < 4; j++) {
+		for (int i = 0; i < 4; i++) {
+			if (tetromino[i][j] == 'X') right_side = j;
+		}
+	}
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			// ground collision
-			if (i + y_off + 1 == h - 1 && tetromino[i][j] == 'X') {
-				drop = 0;
-			}
-			// left wall collision
-			if (j + x_off - 1 < 1 && tetromino[i][j] == 'X') {
-				slide_left = 0;
-				slide_right = 1;
-			}
-			// right wall collision
-			if (j + x_off + 1 > w - 2 && tetromino[i][j] == 'X') {
-				slide_right = 0;
-				slide_left = -1;
-			}
+			if (tetromino[i][j] == 'X') down_side = i;
 		}
+	}
+}
+
+void detect_collision() {
+	// ground
+	if (down_side + y_off == h - 2) drop = 0;
+
+	// left wall
+	if (left_side + x_off <= 1) {
+		slide_left = 0;
+	}
+	else {
+		slide_left = -1;
+	}
+
+	// right wall
+	if (right_side + x_off >= w - 2) {
+		slide_right = 0;
+	}
+	else {
+		slide_right = 1;
 	}
 }
 
@@ -89,9 +109,11 @@ void control() {
 		switch (c) {
 		case 'a':
 			x_off += slide_left;
+			
 			break;
 		case 'd':
 			x_off += slide_right;
+			
 			break;
 		}
 		bind_tetromino();
@@ -99,14 +121,16 @@ void control() {
 }
 
 void bind_tetromino() {
+
 	if (!new_tetromino) {
 		clear_tetromino();
 	}
 	new_tetromino = 0;
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			if (tetromino[i][j] == 'X')
+			if (tetromino[i][j] == 'X' && i + y_off > 0 && i + y_off < h - 1 && j + x_off > 0 && j + x_off < w - 1) {
 				buffer[i + y_off][j + x_off] = tetromino[i][j];
+			}
 		}
 	}
 }
@@ -114,7 +138,7 @@ void bind_tetromino() {
 void clear_tetromino() {
 	for (int i = 0; i < 4; i++) {
 		for (int j = 0; j < 4; j++) {
-			if (tetromino[i][j] == 'X')
+			if (tetromino[i][j] == 'X' && j + x_off != w-1 && j + x_off != 0)
 				buffer[i + y_off][j + x_off] = ' ';
 		}
 	}
@@ -170,6 +194,7 @@ void generate_tetromino(int n) {
 		current_tetromino = tet.z;
 		break;
 	}
+	calculate_sides();
 }
 
 void drop_tetromino() {
@@ -198,7 +223,7 @@ void render() {
 void rotate_tetromino(int angle) {
 	string s = current_tetromino;
 	int index;
-	if (current_tetromino != tet.o) {
+	if (1) {
 		switch (angle) {
 		case 90:
 			clear_tetromino();
@@ -238,4 +263,5 @@ void rotate_tetromino(int angle) {
 			break;
 		}
 	}
+	calculate_sides();
 }
