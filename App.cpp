@@ -66,6 +66,11 @@ int main() {
 
 
 void detect_collision() {
+	// tetromino-tetromino
+	for (int j = 0; j < 4; j++) {
+		if (buffer[down_side + y_off][j + x_off] == 'X' && buffer[down_side + y_off + 1][j + x_off] == 'X') drop = 0;
+	}
+	
 	// ground
 	if (down_side + y_off == h - 2) drop = 0;
 
@@ -132,7 +137,6 @@ void parse_pattern(string s) {
 }
 
 void generate_tetromino(int n) {
-	//unbind_tetromino();
 	slide_left = -1; slide_right = 1;
 	x_off = 4, y_off = 1;
 	new_tetromino = 1;
