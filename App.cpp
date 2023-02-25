@@ -28,6 +28,7 @@ int x_off = 4, y_off = 1;
 int slide_left = -1, slide_right = 1;
 int new_tetromino = 1;
 int left_side, right_side, down_side;
+int rotation_dir = 0;
 
 void init_buffer();
 void render();
@@ -40,6 +41,7 @@ void drop_tetromino();
 void detect_collision();
 void control();
 void calculate_sides();
+void check_line();
 
 int main() {
 	srand((unsigned int)time(0));
@@ -47,22 +49,43 @@ int main() {
 	generate_tetromino(5);
 	bind_tetromino();
 	render();
-	int deg = 90;
+	int deg = 1;
 	Sleep(500);
 	rotate_tetromino(deg);
 	while (1) {
 		detect_collision();
+		check_line();
 		bind_tetromino();
 		render();
 		drop_tetromino();
 		control();
-		Sleep(100);
-		if (drop == 0) generate_tetromino(1);
+		Sleep(200);
+		if (drop == 0) generate_tetromino(1+rand()%8);
 	}
 	ch = _getch();
 	return 0;
 }
 
+void check_line() {
+	int n = 0;
+	for (int i = h - 2; i >= 1; i--) {
+		n = 0;
+		for (int j = 1; j < w - 1; j++) {
+			if (buffer[i][j] == 'X') n++;
+			else break;
+		}
+		if (n == 10) {
+			score++;
+			unbind_tetromino();
+			for (int k = i; k > 1; k--) {
+				for (int j = 1; j < w - 1; j++) {
+					buffer[k][j] = buffer[k - 1][j];
+				}
+			}
+			bind_tetromino();
+		}
+	}
+}
 
 
 void detect_collision() {
@@ -86,16 +109,15 @@ void detect_collision() {
 	unbind_tetromino();
 	for (int j = 0; j < 4; j++) {
 		for (int i = 3; i >= 0; i--) {
-			if (tetromino[i][j] == 'X' && buffer[i + y_off + 1][j + x_off] == 'X') drop = 0;
+			if (tetromino[i][j] == 'X' && buffer[i + y_off + 1][j + x_off] == 'X') {
+				drop = 0;
+				slide_left = 0;
+				slide_right = 0;
+			}
 		}
 	
-		if (tetromino[right_side][j] == 'X' && buffer[right_side + x_off + 1][j] == 'X') slide_right = 0;
-		if (tetromino[left_side][j] == 'X' && buffer[left_side + x_off - 1][j] == 'X') slide_left = 0;
-
-		//if (tetromino[down_side][j] == 'X' && buffer[down_side + y_off + 1][j + x_off] == 'X') {
-			//drop = 0;
-			//slide_left = 0; slide_right = 0;
-	//	}
+		if (tetromino[j][right_side] == 'X' && buffer[j + y_off][right_side + x_off + 1] == 'X') slide_right = 0;
+		if (tetromino[j][left_side] == 'X' && buffer[j + y_off][left_side + x_off - 1] == 'X') slide_left = 0;
 	}
 	bind_tetromino();
 	
@@ -113,11 +135,14 @@ void control() {
 		switch (c) {
 		case 'a':
 			x_off += slide_left;
-			
 			break;
 		case 'd':
 			x_off += slide_right;
-			
+			break;
+		case 'w':
+
+			break;
+		case 's':
 			break;
 		}
 		bind_tetromino();
@@ -220,6 +245,7 @@ void render() {
 		}
 		cout << endl;
 	}
+	cout << "Score: " << score << endl;
 }
 
 void rotate_tetromino(int angle) {
@@ -229,19 +255,19 @@ void rotate_tetromino(int angle) {
 			for (int i = 0; i < 4; i++) {
 				for (int j = 0; j < 4; j++) {
 					tetromino[i][j] = s[index];
-					if (angle == 90) {
+					if (angle == 1) {
 						index = 12 - 4 * j + i;
 						tetromino[i][j] = s[index];
 					}
-					if (angle == 180) {
+					if (angle == 2) {
 						index = 15 - j - 4 * i;
 						tetromino[i][j] = s[index];
 					}
-					if (angle == 270) {
+					if (angle == 3) {
 						index = 3 + 4 * j - i;
 						tetromino[i][j] = s[index];
 					}
-					if (angle == 360) {
+					if (angle == 0) {
 						index = j + 4 * i;
 						tetromino[i][j] = s[index];
 					}
