@@ -49,10 +49,9 @@ int main() {
 	generate_tetromino(5);
 	bind_tetromino();
 	render();
-	int deg = 1;
 	Sleep(500);
-	rotate_tetromino(deg);
 	while (1) {
+		rotate_tetromino(rotation_dir);
 		detect_collision();
 		check_line();
 		bind_tetromino();
@@ -140,9 +139,10 @@ void control() {
 			x_off += slide_right;
 			break;
 		case 'w':
-
+			rotation_dir = (rotation_dir - 1 + 4) % 4;
 			break;
 		case 's':
+			rotation_dir = (rotation_dir + 1) % 4;
 			break;
 		}
 		bind_tetromino();
