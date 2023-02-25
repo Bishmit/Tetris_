@@ -20,7 +20,7 @@ struct tetromino tet;
 string current_tetromino;
 char ch;
 char buffer[h][w];
-char tetromino[4][4];
+char tetromino[5][4];
 int score = 0;
 int game_over = 0;
 int drop = 1;
@@ -83,14 +83,21 @@ void detect_collision() {
 	}
 
 	// tetromino-tetromino
+	unbind_tetromino();
 	for (int j = 0; j < 4; j++) {
-		if (tetromino[down_side][j] == 'X' && buffer[down_side + y_off + 1][j + x_off] == 'X') {
-			drop = 0;
-			slide_left = 0; slide_right = 0;
+		for (int i = 3; i >= 0; i--) {
+			if (tetromino[i][j] == 'X' && buffer[i + y_off + 1][j + x_off] == 'X') drop = 0;
 		}
+	
 		if (tetromino[right_side][j] == 'X' && buffer[right_side + x_off + 1][j] == 'X') slide_right = 0;
 		if (tetromino[left_side][j] == 'X' && buffer[left_side + x_off - 1][j] == 'X') slide_left = 0;
+
+		//if (tetromino[down_side][j] == 'X' && buffer[down_side + y_off + 1][j + x_off] == 'X') {
+			//drop = 0;
+			//slide_left = 0; slide_right = 0;
+	//	}
 	}
+	bind_tetromino();
 	
 	// ground
 	if (down_side + y_off == h - 2) {
