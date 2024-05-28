@@ -115,6 +115,51 @@ void check_line() {
 	}
 }
 
+void detect_collision() {
+	// left wall
+	if (left_side + x_off <= 0) {
+		slide_left = 0;
+	}
+	else {
+		slide_left = -1;
+	}
+
+	// right wall
+	if (right_side + x_off >= w - 1) {
+		slide_right = 0;
+	}
+	else {
+		slide_right = 1;
+	}
+
+	// tetromino-tetromino
+	unbind_tetromino();
+	for (int j = 0; j < 4; j++) {
+		for (int i = 3; i >= 0; i--) {
+			if (tetromino[i][j] == 'X' && buffer[i + y_off + 1][j + x_off] == 'X') {
+				drop = 0;
+				slide_left = 0;
+				slide_right = 0;
+			}
+		}
+	
+		if (tetromino[j][right_side] == 'X' && buffer[j + y_off][right_side + x_off + 1] == 'X') slide_right = 0;
+		if (tetromino[j][left_side] == 'X' && buffer[j + y_off][left_side + x_off - 1] == 'X') slide_left = 0;
+	}
+
+	for (int j = 1; j < w - 1; j++) {
+		if (buffer[5][j] == 'X') game_over = 1;
+	}
+
+	bind_tetromino();
+	
+	// ground
+	if (down_side + y_off == h - 2) {
+		drop = 0;
+		slide_left = 0; slide_right = 0;
+	}
+}
+
 void rotate_tetromino(int angle) {
     string s = current_tetromino;
     char temp[4][4]; 
@@ -296,41 +341,6 @@ void render() {
 	cout << "Score: " << score << endl;
 }
 
-void rotate_tetromino(int angle) {
-	string s = current_tetromino;
-	int index = 0;
-	unbind_tetromino();
-			for (int i = 0; i < 4; i++) {
-				for (int j = 0; j < 4; j++) {
-					tetromino[i][j] = s[index];
-					if (angle == 1) {
-						index = 12 - 4 * j + i;
-						tetromino[i][j] = s[index];
-					}
-					if (angle == 2) {
-						index = 15 - j - 4 * i;
-						tetromino[i][j] = s[index];
-					}
-					if (angle == 3) {
-						index = 3 + 4 * j - i;
-						tetromino[i][j] = s[index];
-					}
-					if (angle == 0) {
-						index = j + 4 * i;
-						tetromino[i][j] = s[index];
-					}
-				}
-			}
-	calculate_sides();
-	if (right_side + x_off >= w - 1) x_off -= right_side - (w - 2);
-	if (left_side + x_off <= 0) x_off += (1 - left_side);
-	for (int i = down_side; i >= 0; i--) {
-		for (int j = left_side; j <= right_side ; j++) {
-			if (tetromino[i][j] == 'X' && buffer[i + y_off][j + x_off] == 'X') y_off--;
-		}
-	}
-	bind_tetromino();
-}
 
 void calculate_sides() {
 	for (int j = 3; j >= 0; j--) {
