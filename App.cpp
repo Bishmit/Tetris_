@@ -117,22 +117,22 @@ void check_line() {
 
 void detect_collision() {
 	// left wall
-	if (left_side + x_off <= 1) {
+	if (left_side + x_off <= 0) {
 		slide_left = 0;
+		x_off = 3; 
 	}
 	else {
 		slide_left = -1;
 	}
 
 	// right wall
-	if (right_side + x_off >= w - 2) {
-		slide_right = 0;
+	if (right_side + x_off >= w - 1) {
+		slide_left = 0; 
+		x_off = w-5;
 	}
 	else {
 		slide_right = 1;
 	}
-
-	// tetromino-tetromino
 	unbind_tetromino();
 	for (int j = 0; j < 4; j++) {
 		for (int i = 3; i >= 0; i--) {
