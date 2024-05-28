@@ -115,51 +115,65 @@ void check_line() {
 	}
 }
 
-void detect_collision() {
-	//left wall
-	if (left_side + x_off <= 0) {
-		slide_left = 0;
-		x_off = 4; 
-	}
-	else {
-		slide_left = -1;
-	}
-
-	// right wall
-	if (right_side + x_off >= w - 1) {
-		slide_right = 0; 
-		x_off = w-5;
-	}
-	else {
-		slide_right = 1;
-	}
-
-	// tetromino-tetromino
-	unbind_tetromino();
-	for (int j = 0; j < 4; j++) {
-		for (int i = 3; i >= 0; i--) {
-			if (tetromino[i][j] == 'X' && buffer[i + y_off + 1][j + x_off] == 'X') {
-				drop = 0;
-				slide_left = 0;
-				slide_right = 0;
-			}
+void rotate_tetromino(int angle) {
+    string s = current_tetromino;
+    char temp[4][4]; 
+    int index = 0;
+    
+	// making a temp variable which will store the rotated tetromino 
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            temp[i][j] = tetromino[i][j]; 
+            if (angle == 1) {
+                index = 12 - 4 * j + i;
+                temp[i][j] = s[index];
+            }
+            if (angle == 2) {
+                index = 15 - j - 4 * i;
+                temp[i][j] = s[index];
+            }
+            if (angle == 3) {
+                index = 3 + 4 * j - i;
+                temp[i][j] = s[index];
+            }
+            if (angle == 0) {
+                index = j + 4 * i;
+                temp[i][j] = s[index];
+            }
+        }
+    }
+    // checking for collsion 
+    for(int i = 0; i<4; i++){
+    	for(int j = 0; j<4; j++){
+    		if(temp[i][j] == 'X'){
+    			/* x_offset is the horizontal position of the top-left corner of the teromino and y_offset and y_offset is vertical postion
+    			of the top-left corner of the tetromino. these are used to calculate the global x and y co-ordinate of each cell of tetromino */
+    			int new_x_pos = j+ x_off; // after adding x-cordinate of cell to x offset the new co-ordinate type location of x in buffer/tetris grid
+    			int new_y_pos = i+ y_off; // similarly new location of y buffer
+    			if(buffer[new_y_pos][new_x_pos] == 'X'){
+    				// if the location is inside the buffer and their is tetromino blocks inside the buffer 
+    				 return ; // simply don't do rotation 
+				}
 		}
-	
-		if (tetromino[j][right_side] == 'X' && buffer[j + y_off][right_side + x_off + 1] == 'X') slide_right = 0;
-		if (tetromino[j][left_side] == 'X' && buffer[j + y_off][left_side + x_off - 1] == 'X') slide_left = 0;
 	}
+}
+	unbind_tetromino();
+	// again copy the temporary rotated tetromino to tetromino 
+	 for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            tetromino[i][j] = temp[i][j];
+        }
+    }
+    calculate_sides();
+     if (right_side + x_off >= w - 1) x_off -= right_side - (w - 2);
+     if (left_side + x_off <= 0) x_off += (1 - left_side);
 
-	for (int j = 1; j < w - 1; j++) {
-		if (buffer[5][j] == 'X') game_over = 1;
-	}
-
-	bind_tetromino();
-	
-	// ground
-	if (down_side + y_off == h - 2) {
-		drop = 0;
-		slide_left = 0; slide_right = 0;
-	}
+    for (int i = down_side; i >= 0; i--) {
+        for (int j = left_side; j <= right_side; j++) {
+            if (tetromino[i][j] == 'X' && buffer[i + y_off][j + x_off] == 'X') y_off--;
+        }
+    }
+    bind_tetromino();
 }
 
 void control() {
